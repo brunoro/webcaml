@@ -470,7 +470,7 @@ FILTERED_OXRIDL := $(filter %.oxridl, $(FILTERED))
 DEP_OXRIDL      := $(FILTERED_OXRIDL:%.oxridl=$(MLDEPDIR)/%.d) $(FILTERED_OXRIDL:.oxridl=.di)
 AUTO_OXRIDL     := $(FILTERED_OXRIDL:.oxridl=.mli) $(FILTERED_OXRIDL:.oxridl=.ml) $(C_OXRIDL)
 
-FILTERED_C_CXX := $(filter %.c %.m %.$(EXT_CXX), $(FILTERED))
+FILTERED_C_CXX := $(filter %.cc %.c %.m %.$(EXT_CXX), $(FILTERED))
 OBJ_C_CXX      := $(FILTERED_C_CXX:.c=.$(EXT_OBJ))
 OBJ_C_CXX      := $(OBJ_C_CXX:.m=.$(EXT_OBJ))
 OBJ_C_CXX      := $(OBJ_C_CXX:.$(EXT_CXX)=.$(EXT_OBJ))

@@ -1,8 +1,10 @@
-SOURCES = src/webcaml.ml src/hello.ml 
+SOURCES = src/webcaml_bridge.cc src/webcaml.ml src/hello.ml 
 RESULT  = hello
 PACKS = ctypes ctypes.foreign
-CLIBS = opencv_core opencv_highgui
-LIBDIRS = "/usr/local/opt/opencv/lib"
+LDFLAGS = $(shell pkg-config --libs opencv)
+CXXFLAGS = $(shell pkg-config --cflags opencv)
+CLIBS = opencv_core opencv_highgui c++
+
 THREADS = yes
 
 all: native-code
