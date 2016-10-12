@@ -4,6 +4,7 @@ PACKS = ctypes ctypes.foreign
 LDFLAGS = $(shell pkg-config --libs opencv)
 CXXFLAGS = $(shell pkg-config --cflags opencv)
 CLIBS = opencv_core opencv_highgui c++
+OCAMLFLAGS = -opaque
 
 THREADS = yes
 
