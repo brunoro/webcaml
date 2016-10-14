@@ -1,5 +1,5 @@
 #include <opencv2/opencv.hpp>
-
+#include <SDL.h>
 
 extern "C" 
 {
@@ -8,62 +8,82 @@ extern "C"
     return new cv::VideoCapture(index);
   }
 
-  void queryFrame(cv::VideoCapture *cap, cv::Mat *frame)
+  SDL_Surface *queryFrame(cv::VideoCapture *cap)
   {
-    *cap >> *frame;
+    cv::Mat frame;
+    bool gotFrame = cap->read(frame);
+
+    if (!gotFrame)
+    {
+        SDL_Log("Couldn't query frame.");
+        return NULL;
+    }
+
+    IplImage iplimage = (IplImage) frame;
+
+    SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(
+        (void*)iplimage.imageData,
+        iplimage.width, iplimage.height,
+        iplimage.depth * iplimage.nChannels, iplimage.widthStep,
+        0xff0000, 0x00ff00, 0x0000ff, 0);
+
+    if(!surface)
+    {
+        SDL_Log("Couldn't convert Mat to Surface.");
+        return NULL;
+    }
+
+    return surface;
   }
-
-  void showImage(cv::Mat *frame)
-  {
-    cv::namedWindow("img", 1);
-    cv::imshow("img", *frame);
-  }
-
-  int waitKey(int sec)
-  {
-    return cv::waitKey(sec);
-  }
-
-  cv::Mat *createFrame()
-  {
-    return new cv::Mat();
-  }
-
-  cv::Mat *duplicateFrame(cv::Mat *mat)
-  {
-    return new cv::Mat(*mat);
-  }
-
-  uchar getPixelR(cv::Mat *mat, int x, int y) { return mat->at<cv::Vec3b>(y,x)[2]; }
-  uchar getPixelG(cv::Mat *mat, int x, int y) { return mat->at<cv::Vec3b>(y,x)[1]; }
-  uchar getPixelB(cv::Mat *mat, int x, int y) { return mat->at<cv::Vec3b>(y,x)[0]; }
-
-  void setPixelR(cv::Mat *mat, int x, int y, uchar r) { mat->at<cv::Vec3b>(y,x)[2] = r; }
-  void setPixelG(cv::Mat *mat, int x, int y, uchar g) { mat->at<cv::Vec3b>(y,x)[1] = g; }
-  void setPixelB(cv::Mat *mat, int x, int y, uchar b) { mat->at<cv::Vec3b>(y,x)[0] = b; }
-
-  uchar zero() { return 0; }
-
-  int rows(cv::Mat *mat) { return mat->rows; }
-  int cols(cv::Mat *mat) { return mat->cols; }
 }
 
-/*
 int main(int, char**)
 {
   cv::VideoCapture *cap = createCapture(0);
-  cv::Mat *frame = createFrame();
-  for(;;)
+  if(!cap || !cap->isOpened())
   {
-    queryFrame(cap, frame);
-    for (int x = 0; x < cols(frame); x++)
-      for (int y = 0; y < rows(frame); y++)
-        setPixelR(frame, x, y, zero());
-    
-    showImage("img", frame);
-    if(waitKey(30) >= 0) break;
+      SDL_Log("Couldn't initialize camera.");
+      return 1;
   }
 
+  SDL_Surface *frame;
+  do { frame = queryFrame(cap); } while (!frame);
+
+  SDL_Init(SDL_INIT_VIDEO);
+  SDL_Window* window;
+  SDL_Renderer* renderer;
+  SDL_CreateWindowAndRenderer(frame->w, frame->h, 0, &window, &renderer);
+
+  Uint32 start;
+  SDL_Event event;
+  bool running = true;
+  while(running)
+  {
+    start = SDL_GetTicks();
+    while(SDL_PollEvent(&event))
+    {
+      switch(event.type)
+      {
+        case SDL_QUIT:
+          running = false;
+          break;
+        case SDL_KEYDOWN:
+          switch(event.key.keysym.sym)
+          {
+            case SDLK_ESCAPE:
+              running = false;
+              break;
+          }
+      }
+    }
+
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, frame);
+    SDL_RenderCopy(renderer, texture, NULL, NULL);
+    SDL_RenderPresent(renderer);
+
+    SDL_FreeSurface(frame);
+    frame = queryFrame(cap);
+  }
+ 
   return 0;
 }
-*/
