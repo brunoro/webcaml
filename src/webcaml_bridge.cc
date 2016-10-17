@@ -5,22 +5,32 @@ extern "C"
 {
   cv::VideoCapture *createCapture(int index) 
   { 
-    return new cv::VideoCapture(index);
+    cv::VideoCapture *cap = new cv::VideoCapture(index);
+    if(!cap || !cap->isOpened())
+    {
+      SDL_SetError("couldn't initialize camera %d", index);
+    }
+    return cap;
   }
 
-  SDL_Surface *queryFrame(cv::VideoCapture *cap)
+  void destroyCapture(cv::VideoCapture *cap)
+  {
+    delete cap;
+  }
+
+  SDL_Surface *querySurface(cv::VideoCapture *cap)
   {
     cv::Mat frame;
     bool gotFrame = cap->read(frame);
 
     if (!gotFrame)
     {
-        SDL_Log("Couldn't query frame.");
+        SDL_SetError("capture returned a NULL frame");
         return NULL;
     }
 
+    // TODO: how to get the correct depth using cv::Mat?
     IplImage iplimage = (IplImage) frame;
-
     SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(
         (void*)iplimage.imageData,
         iplimage.width, iplimage.height,
@@ -29,7 +39,7 @@ extern "C"
 
     if(!surface)
     {
-        SDL_Log("Couldn't convert Mat to Surface.");
+        SDL_SetError("couldn't convert Mat to Surface");
         return NULL;
     }
 
@@ -37,6 +47,7 @@ extern "C"
   }
 }
 
+/*
 int main(int, char**)
 {
   cv::VideoCapture *cap = createCapture(0);
@@ -87,3 +98,4 @@ int main(int, char**)
  
   return 0;
 }
+*/

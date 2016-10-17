@@ -1,8 +1,8 @@
 SOURCES = src/webcaml_bridge.cc src/webcaml.ml src/hello.ml 
 RESULT  = hello
-PACKS = tsdl result ctypes ctypes.foreign
-LDFLAGS = $(shell pkg-config --libs opencv)
-CXXFLAGS = $(shell pkg-config --cflags opencv)
+PACKS = batteries tsdl result ctypes ctypes.foreign
+LDFLAGS = $(shell pkg-config --libs opencv sdl2)
+CXXFLAGS = $(shell pkg-config --cflags opencv sdl2)
 CLIBS = opencv_core opencv_highgui c++
 OCAMLFLAGS = -opaque
 

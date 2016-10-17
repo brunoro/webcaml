@@ -1,13 +1,34 @@
 open Ctypes
-open Unsigned
+open Foreign
+open Tsdl
+open Result
 
 type capture = unit ptr
-let capture : capture typ = ptr void
+let capture = ptr void
+let capture_opt = ptr_opt void
 
-type surface = unit ptr
-let surface : surface typ = ptr void
+let some_to_result = function
+  | Some p -> Ok p
+  | None -> Error (`Msg (Sdl.get_error ()))
 
-open Foreign
+let map_result f v = 
+  match v with
+  | Ok o -> Ok (f o)
+  | Error e -> Error e
 
-let create_capture = foreign "createCapture" (int @-> returning capture)
-let query_frame = foreign "queryFrame" (capture @-> returning surface)
+let create_capture index = 
+  index
+  |> (foreign "createCapture" (int @-> returning capture_opt))
+  |> some_to_result
+
+let destroy_capture = 
+  foreign "destroyCapture" (capture @-> returning void)
+
+let surface_of_ptr p = 
+  p |> raw_address_of_ptr |> Sdl.unsafe_surface_of_ptr
+
+let query_surface cap = 
+  cap 
+  |> (foreign "querySurface" (capture @-> returning (ptr_opt void))) 
+  |> some_to_result
+  |> (map_result surface_of_ptr)
